@@ -1,0 +1,112 @@
+\documentclass[russian,aspectratio=169,14pt]{beamer}
+
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usetikzlibrary{arrows,shapes}
+
+\definecolor{mygreen}{rgb}{0,0.4,0}
+\definecolor{myid}{rgb}{0.1,0.1,0.1}
+\lstdefinestyle{Java}{language=java,
+        numbers=none,stepnumber=1,numberstyle=\small\ttfamily,
+        numbersep=5pt,extendedchars=true,
+        commentstyle=\color{mygreen}\ttfamily,
+        stringstyle=\color{magenta},
+        keywordstyle=\color{violet}\bfseries,
+        ndkeywordstyle=\color{yellow}\bfseries,
+        identifierstyle=\color{myid},
+        basicstyle=\small\ttfamily,
+        escapechar=~,
+        frame=none,
+        lineskip=5pt,
+        tabsize=4
+}
+
+\lstset{breakatwhitespace=false,
+        language=Java,
+        style=Java,
+}
+
+\definecolor{gold}{rgb}{0.85,.66,0}
+
+\tikzstyle{na} = [baseline=-0.5ex]
+\tikzstyle{main node} = [rectangle,fill=black!20,draw,font=\ttfamily\small\bfseries]
+\tikzstyle{target node} = [rectangle,fill=gold!20,draw,font=\ttfamily\small\bfseries]
+\tikzstyle{hb label} = [fill=green!30,font=\ttfamily\small\bfseries]
+\tikzstyle{mc label} = [fill=red!30,font=\ttfamily\small\bfseries]
+\tikzstyle{dr label} = [fill=blue!30,font=\ttfamily\small\bfseries]
+\tikzstyle{hbs label} = [fill=gold!30,font=\ttfamily\small\bfseries]
+\tikzstyle{hb edge} = [draw=green!30,thick,line width=2,font=\ttfamily\small\bfseries]
+\tikzstyle{mc edge} = [draw=red!30,thick,line width=2,font=\ttfamily\small\bfseries]
+\tikzstyle{dr edge} = [draw=blue!30,thick,line width=2,font=\ttfamily\small\bfseries]
+\tikzstyle{hbs edge} = [draw=gold!30,thick,line width=2,font=\ttfamily\small\bfseries]
+
+\newcommand{\hb}{\xrightarrow{\fcolorbox{green!30}{green!30}{\scriptsize hb}}}
+\newcommand{\mc}{\xrightarrow{\fcolorbox{red!30}{red!30}{\scriptsize mc}}}
+\newcommand{\dr}{\xrightarrow{\fcolorbox{blue!30}{blue!30}{\scriptsize dr}}}
+\newcommand{\hbs}{\xrightarrow{\fcolorbox{gold!30}{gold!30}{\scriptsize $hb^*$}}}
+
+
+\tikzstyle{every picture}+=[remember picture]
+
+\begin{document}
+
+% Это весь слайд целиком с анимацией
+%
+\begin{frame}[fragile]
+\frametitle{$HB^*$ example 3}
+
+\begin{tikzpicture}[overlay]
+  \node [anchor=north east, inner sep=10pt] at (current page.north east)
+     {
+\only<1>{\textcolor{black!20}{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc} r1 \xrightarrow{dr} r2$}}
+\only<2>{$w \xrightarrow{hb} f \xrightarrow{hb}$ \textcolor{black!20}{$a \xrightarrow{mc} r1 \xrightarrow{dr} r2$}}
+\only<3>{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc}$ \textcolor{black!20}{$r1 \xrightarrow{dr} r2$}}
+\only<4->{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc} r1 \xrightarrow{dr} r2$}
+     };
+\end{tikzpicture}
+
+% Сорцы и tikz-якоря
+\begin{minipage}{0.49\textwidth}
+	\begin{lstlisting}[escapechar=~]
+T l = new T() {{
+  fx = new int[1]; ~\tikz[na]\node[main node] (q) {q};~
+  fx[0] = 42; ~\tikz[na]\node[target node] (w) {w};~
+}}; ~\tikz[na]\node[main node] (f) {f};~
+GLOBAL = l; ~\tikz[na]\node[main node] (a) {a};~
+	\end{lstlisting}
+\end{minipage}
+\begin{minipage}{0.49\textwidth}
+	\begin{lstlisting}[escapechar=~]
+T o = GLOBAL;
+if (o != null) {
+  int[] lfx = o.fx; ~\tikz[na]\node[main node] (r1) {r1};~
+  int result = lfx[0]; ~\tikz[na]\node[target node] (r2) {r2};~
+}
+	\end{lstlisting}
+\end{minipage}
+
+
+% Подписи, потихоньку появляющиеся под сорцами
+\begin{center}
+\only<2>{Program order induces happens-before:\\ $w \hb f$, $f \hb a$}
+\only<3>{$r1$ sees the write:\\ $a \mc r1$}
+\only<4>{For thread 2, it did not init $q$, $r2$ reads 0-th element of $q$, $r1$ is the only read of $q$ address, therefore by "dereference chain" definition:\\ $r1 \dr r2$}
+\only<5>{Taking everything, it follows from $HB^*$ definition: \\$(w \hb f) \land (f \hb a) \land (a \mc r1) \land (r1 \dr r2) \Rightarrow (w \hbs r2)$}
+\only<6>{($w \hbs r2) \Rightarrow result \in \{42\}$ \\
+Does not matter if $(q \xrightarrow{po} w)$ or $(w \xrightarrow{po} q)$!}
+\end{center}
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [left] node[hb label] {hb} (f);
+  \path[hb edge,->]<2-> (f) edge [left] node[hb label] {hb} (a);
+  \path[mc edge,->]<3-> (a) edge [bend left, looseness=0.9] node[mc label] {mc} (r1);
+  \path[dr edge,->]<4-> (r1) edge [bend right, out = 270, in = 270, looseness = 2] node[dr label] {dr} (r2);
+  \path[hbs edge,->]<5-> (w) edge [bend right, out = 90, in = 90, looseness = 0.7] node[hbs label] {hb*} (r2);
+\end{tikzpicture}
+
+\end{frame}
+
+
+\end{document}
