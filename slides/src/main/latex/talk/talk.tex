@@ -1,5 +1,7 @@
 \documentclass[russian,aspectratio=169,14pt]{beamer}
 
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
 \usepackage{listings}
 \usepackage{tikz}
 \usepackage{amsmath}
@@ -35,10 +37,12 @@
 \tikzstyle{hb label} = [fill=green!30,font=\ttfamily\small\bfseries]
 \tikzstyle{mc label} = [fill=red!30,font=\ttfamily\small\bfseries]
 \tikzstyle{dr label} = [fill=blue!30,font=\ttfamily\small\bfseries]
+\tikzstyle{dr? label} = [fill=blue!30,font=\ttfamily\small\bfseries]
 \tikzstyle{hbs label} = [fill=gold!30,font=\ttfamily\small\bfseries]
 \tikzstyle{hb edge} = [draw=green!30,thick,line width=2,font=\ttfamily\small\bfseries]
 \tikzstyle{mc edge} = [draw=red!30,thick,line width=2,font=\ttfamily\small\bfseries]
 \tikzstyle{dr edge} = [draw=blue!30,thick,line width=2,font=\ttfamily\small\bfseries]
+\tikzstyle{dr? edge} = [draw=blue!30,thick,dashed,line width=2,font=\ttfamily\small\bfseries]
 \tikzstyle{hbs edge} = [draw=gold!30,thick,line width=2,font=\ttfamily\small\bfseries]
 
 \newcommand{\hb}{\xrightarrow{\fcolorbox{green!30}{green!30}{\scriptsize hb}}}
@@ -46,24 +50,136 @@
 \newcommand{\dr}{\xrightarrow{\fcolorbox{blue!30}{blue!30}{\scriptsize dr}}}
 \newcommand{\hbs}{\xrightarrow{\fcolorbox{gold!30}{gold!30}{\scriptsize $hb^*$}}}
 
-
 \tikzstyle{every picture}+=[remember picture]
 
 \begin{document}
 
-% Это весь слайд целиком с анимацией
+% ---------------------------------------
+% Dereference chain. Пример возникновения
 %
 \begin{frame}[fragile]
-\frametitle{$HB^*$ example 3}
+\frametitle{Dereference chain: что это?}
+\vskip0.5cm
+\begin{center}
+\begin{minipage}[3]{.5\linewidth}
+	\begin{lstlisting}[escapechar=~]
+T local = GLOBAL; ~\tikz[na]\node[main node] (r1) {r1};~
+
+int localX = local.x; ~\tikz[na]\node[target node] (r2) {r2};~
+	\end{lstlisting}
+\end{minipage}
+\end{center}
+\vskip0pt plus 1filll
+\begin{center}
+\only<1>{$r2$ читает поле объекта $GLOBAL$}%
+\only<2>{Поток не создавал объект}%
+\only<3>{Значит, где-то мы должны были читать адрес объекта $GLOBAL$}%
+\only<4>{Это называется $r1 \dr r2$}%
+\end{center}
+
+% Have no idea what it is, but it avoids repositioning of code blocks across slides
+\vskip0pt plus 1filll
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[dr edge,->]<4-> (r1) edge [bend right, out = 90, in = 90, looseness = 2] node[dr label] {dr} (r2);
+\end{tikzpicture}
+
+\end{frame}
+
+% ---------------------------------------
+% Dereference chain. Между потоками не возникает
+%
+\begin{frame}[fragile]
+\frametitle{Dereference chain между потоками}
+\vskip0.25cm
+\begin{minipage}[t]{.49\textwidth}
+	\begin{lstlisting}[escapechar=~,title=Thread 1]
+T localA = new T(); ~\tikz[na]\node<2->[main node] (a) {a};~
+GLOBAL = localA;
+	\end{lstlisting}
+\end{minipage}
+\begin{minipage}[t]{.49\textwidth}
+	\begin{lstlisting}[escapechar=~,title=Thread 2]
+T localB = GLOBAL; ~\tikz[na]\node[main node] (r1) {r1};~
+if (localB != null) {
+  int localX = localB.x; ~\tikz[na]\node[target node] (r2) {r2};~
+}
+\end{lstlisting}
+\end{minipage}
+\vskip0pt plus 1filll
+\begin{center}
+\only<1>{$r1 \dr r2$ (читаем поле несозданного нами объекта)}%
+\only<2>{Есть ли $a \dr r2$?}%
+\only<3>{Между потоками $\dr$ не возникает!}%
+\end{center}
+
+% Have no idea what it is, but it avoids repositioning of code blocks across slides
+\vskip0pt plus 1filll
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[dr edge,->]<1-> (r1) edge [bend right, out = 90, in = 90, looseness = 2] node[dr label] {dr} (r2);
+  \path[dr? edge,->]<2-> (a) edge [bend right, out = 270, in = 270, looseness = 0.8] node [dr? label] (drq) {dr?} (r2);
+  \draw<3->[red, line width=1mm]
+    (drq.south west) -- (drq.north east)
+    (drq.south east) -- (drq.north west);
+\end{tikzpicture}
+
+\end{frame}
+
+% ---------------------------------------
+% Dereference chain. Контрольный выстрел
+%
+\begin{frame}[fragile]
+\frametitle{Dereference chain: контрольный выстрел}
+
+\begin{center}
+\begin{minipage}{.5\linewidth}
+	\begin{lstlisting}[escapechar=~]
+T local = GLOBAL; ~\tikz[na]\node[main node] (ra) {ra};~
+
+local = GLOBAL; ~\tikz[na]\node[main node] (rb) {rb};~
+
+int localX = local.x; ~\tikz[na]\node[target node] (r2) {r2};~
+	\end{lstlisting}
+\end{minipage}
+\end{center}
+\vskip0pt plus 1filll
+\begin{center}
+\only<1>{Есть ли здесь $\dr$?}%
+\only<2>{Один из $ra \dr r2$ или $rb \dr r2$ точно должен быть, но точнее сказать невозможно}%
+\end{center}
+
+% Have no idea what it is, but it avoids repositioning of code blocks across slides
+\vskip0pt plus 1filll
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[dr? edge,->]<2-> (ra) edge [bend right, out = 90, in = 90, looseness = 2] node[dr? label] {dr?} (r2);
+  \path[dr? edge,->]<2-> (rb) edge [bend right, out = 90, in = 90, looseness = 1] node[dr? label] {dr?} (r2);
+\end{tikzpicture}
+
+\end{frame}
+
+% ---------------------------------------
+% TODO TODO: нужен какой-то простой пример
+%
+
+
+% ---------------------------------------
+% Пример 3 "массив внутри final поля"
+%
+\begin{frame}[fragile]
+\frametitle{Массив в final поле (пример 3)}
 
 \begin{tikzpicture}[overlay]
-  \node [anchor=north east, inner sep=10pt] at (current page.north east)
-     {
-\only<1>{\textcolor{black!20}{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc} r1 \xrightarrow{dr} r2$}}
-\only<2>{$w \xrightarrow{hb} f \xrightarrow{hb}$ \textcolor{black!20}{$a \xrightarrow{mc} r1 \xrightarrow{dr} r2$}}
-\only<3>{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc}$ \textcolor{black!20}{$r1 \xrightarrow{dr} r2$}}
-\only<4->{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc} r1 \xrightarrow{dr} r2$}
-     };
+\node [anchor=north east, inner sep=10pt] at (current page.north east){%
+\only<1>{$\textcolor{black!20}{w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc} r1 \xrightarrow{dr} r2}$}%
+\only<2>{$w \xrightarrow{hb} f \xrightarrow{hb} \textcolor{black!20}{a \xrightarrow{mc} r1 \xrightarrow{dr} r2}$}%
+\only<3>{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc} \textcolor{black!20}{r1 \xrightarrow{dr} r2}$}%
+\only<4->{$w \xrightarrow{hb} f \xrightarrow{hb} a \xrightarrow{mc} r1 \xrightarrow{dr} r2$}%
+};
 \end{tikzpicture}
 
 % Сорцы и tikz-якоря
@@ -86,22 +202,24 @@ if (o != null) {
 	\end{lstlisting}
 \end{minipage}
 
-
 % Подписи, потихоньку появляющиеся под сорцами
 \begin{center}
-\only<2>{Program order induces happens-before:\\ $w \hb f$, $f \hb a$}
-\only<3>{$r1$ sees the write:\\ $a \mc r1$}
-\only<4>{For thread 2, it did not init $q$, $r2$ reads 0-th element of $q$, $r1$ is the only read of $q$ address, therefore by "dereference chain" definition:\\ $r1 \dr r2$}
-\only<5>{Taking everything, it follows from $HB^*$ definition: \\$(w \hb f) \land (f \hb a) \land (a \mc r1) \land (r1 \dr r2) \Rightarrow (w \hbs r2)$}
+\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $f \hb a$}%
+\only<3>{$r1$ видит запись (т.к. простое final поле):\\ $a \mc r1$}%
+\only<4>{Поток 2 не создавал объект $q$, $r2$ читает 0ой элемент $q$, $r1$ это единственное чтение адреса объекта $q$, поэтому dereference chain:\\ $r1 \dr r2$}%
+\only<5>{Нашли всё необходимое для $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
 \only<6>{($w \hbs r2) \Rightarrow result \in \{42\}$ \\
-Does not matter if $(q \xrightarrow{po} w)$ or $(w \xrightarrow{po} q)$!}
+Результат не зависит от того, в каком порядке выполнялись действия $(q)$ и $(w)$!}%
 \end{center}
+
+% Have no idea what it is, but it avoids repositioning of code blocks across slides
+\vskip0pt plus 1filll
 
 % Стрелочки между tikz-якорями
 \begin{tikzpicture}[overlay]
   \path[hb edge,->]<2-> (w) edge [left] node[hb label] {hb} (f);
-  \path[hb edge,->]<2-> (f) edge [left] node[hb label] {hb} (a);
-  \path[mc edge,->]<3-> (a) edge [bend left, looseness=0.9] node[mc label] {mc} (r1);
+  \path[hb edge,->]<2-> (f) edge [bend left, looseness=0.1] node[hb label] {hb} (a);
+  \path[mc edge,->]<3-> (a) edge [bend left, looseness=0.7] node[mc label] {mc} (r1);
   \path[dr edge,->]<4-> (r1) edge [bend right, out = 270, in = 270, looseness = 2] node[dr label] {dr} (r2);
   \path[hbs edge,->]<5-> (w) edge [bend right, out = 90, in = 90, looseness = 0.7] node[hbs label] {hb*} (r2);
 \end{tikzpicture}
