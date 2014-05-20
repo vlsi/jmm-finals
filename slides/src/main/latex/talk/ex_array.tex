@@ -1,0 +1,53 @@
+% ---------------------------------------
+% Пример 2 "массив внутри final поля"
+%
+\ifrender
+\subsection{Массив внутри final (2)}
+\begin{frame}[fragile]{Массив внутри final (2)}
+\vskiptitle
+\hbsprogress{2-}{2-}{3-}{4-}%
+% Сорцы и tikz-якоря
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T l = new T() {{
+  int[] u = new int[1];
+  u[0] = 42; ~\nd<1->[1,2,5,6]{w}~
+  fx = u;
+}}; ~\nd<2->[2]{f}~
+GLOBAL = l; ~\nd<2->[2,3]{a}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T o = GLOBAL;
+if (o != null) {
+  int[] lfx = o.fx; ~\nd<3->[3,4]{r1}~
+  int result = lfx[0]; ~\nd<1->[1,4,5,6]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [] node {hb} (f);
+  \path[hb edge,->]<2-> (f) edge [bend left=15] node {hb} (a);
+  \path[mc edge,->]<3-> (a) edge [bend left, looseness=0.7] node {mc} (r1);
+  \path[dr edge,->]<4-> (r1) edge [bend right, out = 270, in = 270, looseness = 2.2] node {dr} (r2);
+  \path[hbs edge,->]<5-> (w) edge [bend right, out = 90, in = 90, looseness = 0.7] node {hb*} (r2);
+\end{tikzpicture}
+
+% Подписи, потихоньку появляющиеся под сорцами
+\begin{center}
+\only<1>{Возможно ли в \result~получить $0$?}%
+\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $f \hb a$}%
+\only<3>{\nd[3]{r1} видит запись \nd[3]{a} (т.к. простое final поле):\\ $a \mc r1$}%
+\only<4>{Поток 2 не создавал массив, $r2$ читает его элемент, $r1$ это единственное чтение адреса массива, поэтому dereference chain:\\ $r1 \dr r2$}%
+\only<5>{Нашли всё необходимое для $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
+\only<6>{($w \hbs r2) \Rightarrow$ \result~$\in \{42\}$}%
+\end{center}
+
+\vskipfill
+\end{frame}
+\fi

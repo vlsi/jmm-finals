@@ -1,0 +1,24 @@
+% ---------------------------------------
+% HB*
+%
+\ifrender
+\subsection{HB$^*$}
+\begin{frame}[fragile]{Семантика final полей одним слайдом}
+\vskip1.5cm
+\scalebox{1.5}{$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}
+\vskip1.3cm
+\only<1-2>{%
+\begin{itemize}[<+->]
+\item $w$ и $r2$ -- интересующие нас нас запись и чтение
+\item $f$ -- заморозка \lstinline!final! поля, которое читается в $r1$
+\end{itemize}
+}%
+\only<3-4>{%
+\begin{itemize}[<+(2)->]
+\item Если единственный путь от записи к чтению идёт через все эти стрелочки, то мы не можем увидеть более ранние записи
+\item Если путей больше одного -- как повезёт
+\end{itemize}
+}%
+\vskipfill
+\end{frame}
+\fi

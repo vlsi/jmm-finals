@@ -1,10 +1,35 @@
-\documentclass[russian,aspectratio=169,14pt]{beamer}
+% !TEX TS-program = lualatex
+\documentclass[russian,aspectratio=169,14pt,dvipsnames]{beamer}
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
 \usepackage{listings}
 \usepackage{tikz}
 \usepackage{amsmath}
-\usetikzlibrary{arrows,shapes}
+\usepackage[]{hyperref}
+\usepackage{ulem}
+
+\usetikzlibrary{arrows,shapes,calc}
+
+% Allows to disable rendering of all the slides
+\let\ifrender\iftrue
+%\let\ifrender\iffalse
+
+\hypersetup{
+%    pdfauthor={Vladimir Sitnikov},
+%    pdftitle={JMM},
+    pdfsubject={Final fields semantics in java memory model},
+    pdfkeywords={jmm, final, freeze, dereference chain, memory chain, happens before},
+    bookmarksnumbered=true,
+    bookmarksopen=true,
+    bookmarksopenlevel=1,
+    colorlinks=true,
+    pdfstartview=Fit,
+    pdfpagemode=UseOutlines,
+    pdfpagelayout=SinglePage
+}
+
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{footline}[page number]
 
 \definecolor{mygreen}{rgb}{0,0.4,0}
 \definecolor{myid}{rgb}{0.1,0.1,0.1}
@@ -28,39 +53,54 @@
         style=Java,
 }
 
-\definecolor{gold}{rgb}{0.85,.66,0}
-\selectcolormodel{cmyk}
-\definecolor{c1}{tHsb}{0,0.5,1}
-\definecolor{c2}{tHsb}{90,0.5,1}
-\definecolor{c3}{tHsb}{180,0.5,1}
-\definecolor{c4}{tHsb}{270,0.5,1}
-%\convertcolorspec{tHsb}{210,1,1}{rgb}{\c1spec}
-%\definecolor{c1}{rgb}{\c1spec}	
+% Colorbrewer2, 4-class Pastel1
+\definecolor{c1}{RGB}{251,180,174}
+\definecolor{c2}{RGB}{179,205,227}
+\definecolor{c3}{RGB}{204,235,197}
+\definecolor{c4}{RGB}{222,203,228}
+
+\definecolor{hbcolor}{named}{c1}
+\definecolor{mccolor}{named}{c2}
+\definecolor{drcolor}{named}{c3}
+\definecolor{hbscolor}{named}{c4}
 
 \tikzstyle{labelfont} = [font=\ttfamily\small\bfseries]
 \tikzstyle{na} = [anchor=base,baseline,rectangle,draw,labelfont]
 \tikzstyle{main node} = [na,fill=black!20]
-\tikzstyle{target node} = [na,fill=gold!20]
-%\tikzstyle{hb label} = [fill=green!30,labelfont]
-\tikzstyle{hb label} = [fill=c1,labelfont]
-\tikzstyle{mc label} = [fill=c2,labelfont]
-\tikzstyle{dr label} = [fill=c3,labelfont]
-\tikzstyle{hbs label} = [fill=c4,labelfont]
-\tikzstyle{edge style} = [thick,line width=2,labelfont]
-\tikzstyle{hb edge} = [draw=c1,edge style]
-\tikzstyle{mc edge} = [draw=c2,edge style]
-\tikzstyle{dr edge} = [draw=c3,edge style]
-\tikzstyle{hbs edge} = [draw=c4,edge style]
+\tikzstyle{target node} = [na,fill=Goldenrod!20]
+\tikzstyle{hb label} = [fill=hbcolor,labelfont]
+\tikzstyle{mc label} = [fill=mccolor,labelfont]
+\tikzstyle{dr label} = [fill=drcolor,labelfont]
+\tikzstyle{hbs label} = [fill=hbscolor,labelfont]
+\tikzstyle{edge style} = [thick,line width=2,labelfont,text=black]
+\tikzstyle{hb edge} = [hbcolor,edge style,every node/.style={hb label}]
+\tikzstyle{mc edge} = [mccolor,edge style,every node/.style={mc label}]
+\tikzstyle{dr edge} = [drcolor,edge style,every node/.style={dr label}]
+\tikzstyle{hbs edge} = [hbscolor,edge style,every node/.style={hbs label}]
 \tikzstyle{maybe} = [dashed]
 
 \tikzset{alt/.code args={#1#2#3}{%
 \if\relax#1\relax\pgfkeysalso{#3}\else\alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}\fi%
 }}	
 
-\newcommand{\hb}{\xrightarrow{\fcolorbox{green!30}{green!30}{\scriptsize hb}}}
-\newcommand{\mc}{\xrightarrow{\fcolorbox{red!30}{red!30}{\scriptsize mc}}}
-\newcommand{\dr}{\xrightarrow{\fcolorbox{blue!30}{blue!30}{\scriptsize dr}}}
-\newcommand{\hbs}{\xrightarrow{\fcolorbox{gold!30}{gold!30}{\scriptsize $hb^*$}}}
+\newcommand{\newarrow}[3]{
+\newcommand{#1}{\xrightarrow{\fcolorbox{#3}{#3}{\scriptsize #2}}}
+}
+
+\newarrow{\hb}{hb}{hbcolor}
+\newarrow{\mc}{mc}{mccolor}
+\newarrow{\dr}{dr}{drcolor}
+\newarrow{\hbs}{$hb^*$}{hbscolor}
+
+\newcommand{\colbox}[3]{
+\newcommand{#1}{\fcolorbox{#3}{#3}{#2}}
+}
+
+\colbox{\hbbox}{hb}{hbcolor}
+\colbox{\mcbox}{mc}{mccolor}
+\colbox{\drbox}{dr}{drcolor}
+\colbox{\hbsbox}{$hb^*$}{hbscolor}
+
 \newcommand{\result}{\lstinline!result!}
 
 \newcommand<>\nd[2][]{%
@@ -69,15 +109,13 @@
 }
 
 \newcommand<>{\redcross}[1]{
-\ifx\relax#2\relax%
-\draw[red, line width=0.3mm]
-    (#1.south west) -- (#1.north east)
-    (#1.south east) -- (#1.north west);%
-\else%
 \draw#2[red, line width=0.3mm]
     (#1.south west) -- (#1.north east)
     (#1.south east) -- (#1.north west);%
-\fi%
+}
+
+\renewcommand<>{\sout}[1]{
+  \alt#2{\beameroriginal{\sout}{#1}}{#1}
 }
 
 \newcommand<>\dimunless[1]{\alt#2{\textcolor{black}{#1}}{\textcolor{black!20}{#1}}}
@@ -92,505 +130,23 @@ $\dimunless<#1>{w}~\dimunless<#2>{\xrightarrow{hb}}~\dimunless<#3>{f}~\dimunless
 
 \newcommand{\hbsprogress}[4]{\hbsprogresss{#1}{#1}{#1}{#2}{#2}{#3}{#3}{#4}{#4}}
 
-\newcommand\vskiptitle{\vskip0.25cm}
-\newcommand\vskipfill{\vskip0pt plus 1filll}
+\newcommand\vskiptitle{\vglue0.25cm}
+\newcommand\vskipfill{\vglue0pt plus 1filll}
 
 \tikzstyle{every picture}+=[remember picture]
 
-% Позволяет отключить 
-%\let\ifrender\iftrue
-\let\ifrender\iffalse
+%\setcounter{tocdepth}{1}
+\ifrender
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \setcounter{tocdepth}{1}
+    \tableofcontents[currentsection]
+    \setcounter{tocdepth}{5}
+  \end{frame}
+}
+\fi
 
 \begin{document}
-
-% ---------------------------------------
-% Dereference chain. Пример возникновения
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Dereference chain: что это?}
-\vskiptitle
-\begin{center}
-\begin{minipage}[3]{.5\linewidth}
-	\begin{lstlisting}[escapechar=~]
-T local = GLOBAL; ~\nd<1->{r1}~
-
-int localX = local.x; ~\nd<1->[1-]{r2}~
-	\end{lstlisting}
-\end{minipage}
-\end{center}
-\vskipfill
-
-\begin{itemize}[<+->]
-\item \nd[1-]{r2} читает поле объекта
-\item Поток не создавал объект
-\item Значит, где-то мы должны были читать адрес этого объекта
-\item Это называется $r1 \dr r2$
-\end{itemize}
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[dr edge,->]<4-> (r1) edge [bend right, out = 90, in = 90, looseness = 2] node[dr label] {dr} (r2);
-\end{tikzpicture}%
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Dereference chain. Между потоками не возникает
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Dereference chain между потоками}
-\vskiptitle
-\begin{minipage}[t]{.49\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 1]
-T localA = new T(); ~\nd<2->[2,3]{a}~
-GLOBAL = localA;
-	\end{lstlisting}
-\end{minipage}
-\begin{minipage}[t]{.49\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 2]
-T localB = GLOBAL; ~\nd<1->[1]{r1}~
-if (localB != null) {
-  int localX = localB.x; ~\nd<1->[1-]{r2}~
-}
-\end{lstlisting}
-\end{minipage}
-\vskipfill
-
-\begin{center}
-\only<1>{$r1 \dr r2$ (читаем поле несозданного нами объекта)}%
-\only<2>{Есть ли $a \dr r2$?}%
-\only<3>{Между потоками $\dr$ не возникает!}%
-\end{center}
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[dr edge,->]<1-> (r1) edge [bend right, out = 90, in = 90, looseness = 2] node[dr label] {dr} (r2);
-  \path[dr edge,maybe,->]<2-> (a) edge [bend right, out = 270, in = 270, looseness = 0.8] node [dr label] (drq) {dr?} (r2);
-  \redcross<3->{drq}
-\end{tikzpicture}
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Dereference chain. Контрольный выстрел
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Dereference chain: контрольный выстрел}
-\vskiptitle
-\begin{center}
-\begin{minipage}{.5\linewidth}
-	\begin{lstlisting}[escapechar=~]
-T local = GLOBAL; ~\nd<1->[2]{ra}~
-
-local = GLOBAL; ~\nd<1->[2]{rb}~
-
-int localX = local.x; ~\nd<1->{r2}~
-	\end{lstlisting}
-\end{minipage}
-\end{center}
-\vskipfill
-
-\begin{center}
-\only<1>{Есть ли здесь $\dr$?}%
-\only<2>{Один из $ra \dr r2$ или $rb \dr r2$ точно должен быть, но точнее сказать невозможно}%
-\end{center}
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[dr edge,maybe,->]<2-> (ra) edge [bend right, out = 90, in = 90, looseness = 2] node[dr label] {dr?} (r2);
-  \path[dr edge,maybe,->]<2-> (rb) edge [bend right, out = 90, in = 90, looseness = 1] node[dr label] {dr?} (r2);
-\end{tikzpicture}
-
-\end{frame}
-\fi
-% ---------------------------------------
-% TODO TODO: нужен какой-то простой пример
-%
-
-% ---------------------------------------
-% Memory chain. Пример возникновения.
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Memory chain: что это?}
-\vskip0.25cm
-\begin{minipage}[t]{.33\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 1]
-T o = new T();
-GL = o; ~\nd<1->[1,6]{w1}~
-	\end{lstlisting}
-\end{minipage}%
-\begin{minipage}[t]{.33\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 2]
-T o = GL; ~\nd<1->[1,2]{r1}~
-GL2 = o; ~\nd<2->[2,3]{w2}~
-\end{lstlisting}
-\end{minipage}%
-\begin{minipage}[t]{.33\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 3]
-T o = GL2; ~\nd<3->[3,5]{r3}~
-int r = o.x; ~\nd<4->[4-6]{r4}~
-\end{lstlisting}
-\end{minipage}
-\vskipfill
-\begin{center}
-\only<1>{Если чтение видит запись, то $w1 \mc r1$}%
-\only<2>{Если пишем адрес созданного ненами объекта, то $r1 \mc w2$}%
-\only<3>{\nd[3]{r3} видит \nd[3]{w2} $\Rightarrow w2 \mc r3$}%
-\only<4,5>{$r3 \dr r4$ (читаем поле объекта) \uncover<5>{$\Rightarrow r3 \mc r4$}}%
-\only<6>{$\mc$ транзитивно (т.к. частичный порядок) $\Rightarrow w1 \mc r4$}%
-\end{center}
-
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[mc edge,->]<1-> (w1) edge [bend left=30] node[mc label] {mc} (r1);
-  \path[mc edge,->]<2-> (r1) edge [out=0, in=-45, looseness=3] node[mc label] {mc} (w2);
-  \path[mc edge,->]<3-> (w2) edge [bend left=30] node[mc label] {mc} (r3);
-  \path[dr edge,->]<4-> (r3) edge [out=45, in=45, looseness=2.5] node[dr label] {dr} (r4);
-  \path[mc edge,->]<5-> (r3) edge [out=235, in=235, looseness=2.5] node[mc label] {mc} (r4);
-  \path[mc edge,->]<6-> (w1) edge [out=-90, in=-90, looseness=0.4] node[mc label] {mc} (r4);
-\end{tikzpicture}
-\end{frame}
-\fi
-
-% ---------------------------------------
-% HB*
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Семантика final полей одним слайдом}
-\vskipfill
-\scalebox{1.5}{$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}
-\vskipfill
-\begin{itemize}[<+->]
-\item Если единственный путь от записи к чтению идёт через все эти стрелочки, то мы не можем увидеть более ранние записи
-\item Если путей больше одного -- мы попали
-\end{itemize}
-\vskipfill
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Пример 1 "простое final поле"
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Эталонный final (1)}
-\hbsprogress{2-}{2-}{6-}{7-}%
-\vskiptitle
-% Сорцы и tikz-якоря
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 1]
-T l = new T() {{
-  fx = 42; ~\nd<1->[1,2,4,8,9]{w}~
-}}; ~\nd<2->[2]{f}~
-GLOBAL = l; ~\nd<2->[2,3,6]{a}~
-	\end{lstlisting}
-\end{minipage}%
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 2]
-T o = GLOBAL; ~\nd<3-6>[3,4,5]{r0}~
-if (o != null) {
-  int result = o.fx; ~\nd<4->[4,5,6,7]{r1}~ ~\nd<1,7->[1,7,8,9]{r2}~
-}
-	\end{lstlisting}
-\end{minipage}
-
-% Подписи, потихоньку появляющиеся под сорцами
-\begin{center}
-\only<1>{Какое значение \result~допустимо? $\{0, 42, NPE\}$?}%
-\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $f \hb a$}%
-\only<3>{\nd[3]{rg} видит запись \nd[3]{a}:\\ $a \mc r0$}%
-\only<4>{Поток 2 не создавал объект, \nd[4]{r1} читает его поле, а \nd[4]{r} это единственное чтение адреса объекта, поэтому dereference chain:\\ $rg \dr r1$}%
-\only<5>{$r0 \dr r1 \Rightarrow r0 \mc r1$}%
-\only<6>{$a \mc r1$ ($\mc$ транзитивно)}%
-\only<7>{Возьмём $r2 \equiv r1$, тогда $r1 \dr r2$ ($\dr$ рефлексивно)}%
-\only<8>{Нашли всё необходимое для $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
-\only<9>{$(w \hbs r2) \Rightarrow$ \result~$\in \{42\}$}%
-\end{center}
-
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[hb edge,->]<2-> (w) edge [out=120, in=110, looseness=2.5] node[hb label] {hb} (f);
-  \path[hb edge,->]<2-> (f) edge [bend left=15] node[hb label] {hb} (a);
-  \path[mc edge,->]<3-6> (a) edge [bend left=40, in=140] node[mc label] {mc} (r0);
-  \path[dr edge,->]<4-5> (r0) edge [bend right, out = 270, in = 270, looseness = 2] node[dr label] {dr} (r1);
-  \path[mc edge,->]<5,6> (r0) edge [bend left=20] node[mc label] {mc} (r1);
-  \path[mc edge,->]<6> (a) edge [bend left=70, in=90, looseness=1.2] node[mc label] {mc} (r1);
-  \path[mc edge,->]<7-> (a) edge [bend left=45, in=135] node[mc label] {mc} (r1);
-  \path[dr edge,->]<7-> (r1) edge [out=-90, in=-90, looseness = 1.5] node[dr label] {dr} (r2);
-  \path[hbs edge,->]<8-> (w) edge [bend right, out = 45, in = 110, looseness = 1.0] node[hbs label] {hb*} (r2);
-\end{tikzpicture}
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Пример 2 "массив внутри final поля"
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Массив внутри final (2)}
-\vskiptitle
-\hbsprogress{2-}{2-}{3-}{4-}%
-% Сорцы и tikz-якоря
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~]
-T l = new T() {{
-  int[] u = new int[1];
-  u[0] = 42; ~\nd<1->[1,2,5,6]{w}~
-  fx = u;
-}}; ~\nd<2->[2]{f}~
-GLOBAL = l; ~\nd<2->[2,3]{a}~
-	\end{lstlisting}
-\end{minipage}%
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~]
-T o = GLOBAL;
-if (o != null) {
-  int[] lfx = o.fx; ~\nd<3->[3,4]{r1}~
-  int result = lfx[0]; ~\nd<1->[1,4,5,6]{r2}~
-}
-	\end{lstlisting}
-\end{minipage}
-
-% Подписи, потихоньку появляющиеся под сорцами
-\begin{center}
-\only<1>{Какое значение \result~допустимо? $\{0, 42\}$?}%
-\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $f \hb a$}%
-\only<3>{\nd[3]{r1} видит запись \nd[3]{a} (т.к. простое final поле):\\ $a \mc r1$}%
-\only<4>{Поток 2 не создавал массив, $r2$ читает его элемент, $r1$ это единственное чтение адреса массива, поэтому dereference chain:\\ $r1 \dr r2$}%
-\only<5>{Нашли всё необходимое для $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
-\only<6>{($w \hbs r2) \Rightarrow$ \result~$\in \{42\}$}%
-\end{center}
-
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[hb edge,->]<2-> (w) edge [] node[hb label] {hb} (f);
-  \path[hb edge,->]<2-> (f) edge [bend left=15] node[hb label] {hb} (a);
-  \path[mc edge,->]<3-> (a) edge [bend left, looseness=0.7] node[mc label] {mc} (r1);
-  \path[dr edge,->]<4-> (r1) edge [bend right, out = 270, in = 270, looseness = 2.2] node[dr label] {dr} (r2);
-  \path[hbs edge,->]<5-> (w) edge [bend right, out = 90, in = 90, looseness = 0.7] node[hbs label] {hb*} (r2);
-\end{tikzpicture}
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Пример 2.1 "порядок присваивания final"
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Массив наоборот (2.1)}
-\vskiptitle
-\hbsprogress{2-}{2-}{2-}{2-}%
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~]
-T l = new T() {{
-  int[] u = new int[1];
-  fx = u; // (!)
-  u[0] = 42; ~\nd<1->[1,2,3]{w}~
-}}; ~\nd<2->{f}~
-GLOBAL = l; ~\nd<2->{a}~
-	\end{lstlisting}
-\end{minipage}%
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~]
-T o = GLOBAL;
-if (o != null) {
-  int[] lfx = o.fx; ~\nd<2->{r1}~
-  int result = lfx[0]; ~\nd<2->[2,3]{r2}~
-}
-	\end{lstlisting}
-\end{minipage}
-
-% Подписи, потихоньку появляющиеся под сорцами
-\begin{center}
-\only<1>{Какое значение \result~допустимо? $\{0, 42\}$?}%
-\only<2>{Строим $\hbs$ так же как и в предыдущем случае}%
-\only<3>{($w \hbs r2) \Rightarrow$ \result~$\in \{42\}$\\Результат не зависит от порядка записи final полей!}%
-\end{center}
-
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[hb edge,->]<2-> (w) edge [] node[hb label] {hb} (f);
-  \path[hb edge,->]<2-> (f) edge [bend left=15] node[hb label] {hb} (a);
-  \path[mc edge,->]<2-> (a) edge [bend left, looseness=0.7] node[mc label] {mc} (r1);
-  \path[dr edge,->]<2-> (r1) edge [bend right, out = 270, in = 270, looseness = 2.2] node[dr label] {dr} (r2);
-  \path[hbs edge,->]<2-> (w) edge [bend right, out = 90, in = 90, looseness = 0.7] node[hbs label] {hb*} (r2);
-\end{tikzpicture}
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Пример 3 "утекание this из конструктора"
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Утекание this (3)}
-\vskiptitle
-\hbsprogress{2-}{0}{0}{0}%
-% Сорцы и tikz-якоря
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 1]
-T l = new T() {{
-  fx = 42; ~\nd<1->[1,2]{w}~
-  GLOBAL = this; ~\nd<2->[2,3,4,5]{a}~
-}}; ~\nd<2->[2,3,4]{f}~
-	\end{lstlisting}
-\end{minipage}%
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 2]
-T o = GLOBAL;
-if (o != null) {
-  int result = o.fx; ~\nd<1->[1,5]{r2}~
-}
-	\end{lstlisting}
-\end{minipage}
-
-% Подписи, потихоньку появляющиеся под сорцами
-\begin{center}
-\only<1>{Какое значение \result~допустимо? $\{0, 42\}$?}%
-\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $a \hb f$}%
-\only<3>{Но нам-то нужно $f \hb a$!}%
-\only<4>{Если $a \hb f$ и $f \hb a$, то $a \equiv f$ (антисимметричность $\hb$)\\Но публикация ссылки это никак не freeze action!}%
-\only<5>{Нет $\hbs$, поэтому возможны все варианты: \result~$\in \{0, 42\}$}%
-\end{center}
-
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[hb edge,->]<2-> (w) edge [out=135, in=135, looseness=1.5] node[hb label] {hb} (f);
-  \path[hb edge,->]<2-> (a) edge [bend left=60] node[hb label] {hb} (f);
-  \path[hb edge,maybe,->]<3-> (f) edge [bend right=5] node[hb label] (hbq) {hb?} (a);
-  \redcross<4->{hbq}
-\end{tikzpicture}
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Пример 4 "утекание this из конструктора, чтение из другой ссылки"
-%
-\iftrue
-\begin{frame}[fragile]
-\frametitle{Двойное утекание this (4)}
-\vskiptitle
-\hbsprogress{2-}{2-}{0}{5-}%
-% Сорцы и tikz-якоря
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 1]
-T l = new T() {{
-  fx = 42; ~\nd<1->[1,2]{w}~
-  GLb = this; ~\nd<2->[3,6]{b}~
-}}; ~\nd<2->[2]{f}~
-GLa = l; ~\nd<2->[2,3]{a}~
-	\end{lstlisting}
-\end{minipage}%
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 2]
-T u = GLb; ~\nd<3->[3,4,5,6]{rb}~
-T o = GLa; ~\nd<3->[3,4]{ra}~
-if (o != null) {
-  int result = o.fx; ~\nd<4->[4,5,6]{r1}~ ~\nd<1>[1]{r2}~
-}
-	\end{lstlisting}
-\end{minipage}
-
-% Подписи, потихоньку появляющиеся под сорцами
-\begin{center}
-\only<1>{Какое значение \result~допустимо? $\{0, 42\}$?}%
-\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $f \hb a$}%
-\only<3>{NPE нам неинтересны, поэтому $b \mc rb$ и $a \mc ra$!}%
-\only<4>{Где-то должно быть $\dr$: $rb \dr r1$ или $ra \dr r1$}%
-\only<5>{Если $rb \dr r1$, то мы попали, т.к. $\hbs$ не строится}%
-\only<6>{Вывод: если наш поток уже читал объект с незамороженными полями, то гараний final semantics нет!}%
-\end{center}
-
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[hb edge,->]<2-> (w) edge [out=120, in=110, looseness=2.5] node[hb label] {hb} (f);
-  \path[hb edge,->]<2-> (f) edge [bend right=80, looseness=1.6] node[hb label] {hb} (a);
-  \path[hb edge,maybe,->]<2-> (f) edge [bend right=5] node[hb label] (hbb) {hb?} (b);
-  \redcross<2->{hbb}
-  \path[mc edge,->]<3-> (b) edge [bend left, looseness=1.2] node[mc label] {mc} (rb);
-  \path[mc edge,->]<3-> (a) edge [bend left, looseness=0.7] node[mc label] {mc} (ra);
-  \path[dr edge,maybe,->]<4-> (ra) edge [out = -90, in = 235, looseness = 1.5] node[dr label] {dr?} (r1);
-  \path[dr edge,maybe,->]<4> (rb) edge [out = 0, in = 90, looseness = 1.5] node[dr label] {dr?} (r1);
-  \path[dr edge,->]<5-> (rb) edge [out = 0, in = 90, looseness = 1.5] node[dr label] {dr} (r1);
-\end{tikzpicture}
-\end{frame}
-\fi
-
-% ---------------------------------------
-% Пример 5 "reflection in action"
-%
-\ifrender
-\begin{frame}[fragile]
-\frametitle{Reflection in action (5)}
-\hbsprogresss{0}{0}{4-}{4-}{2-}{2-}{2-}{0}{0}%
-% Сорцы и tikz-якоря
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~]
-T t = new T() {{
-  fu = new U();
-  fu.x = 1; ~\nd<1>[1]{w1}~
-}}; ~\nd<4->[4,6,7]{f1}~
-GLOBAL = t; ~\nd<2,8>[2,7]{a}~
-U w = new U();
-w.x = 42; ~\nd<1,3->[1,3,6,7]{w2}~
-reflectSet(t.fu, w); ~\nd<2->[2,4,5,8]{b}~ ~\nd<4->[4,5]{f2}~
-	\end{lstlisting}
-\end{minipage}%
-\begin{minipage}{0.5\textwidth}
-	\begin{lstlisting}[escapechar=~,title=Thread 2]
-T t = GLOBAL;
-if (t != null) {
-  U u = t.fu; ~\nd<2->[2]{r1}~
-  int result = u.x; ~\nd<1,3->[1,3]{r2}~
-}
-	\end{lstlisting}
-\end{minipage}
-
-% Подписи, потихоньку появляющиеся под сорцами
-\begin{center}
-\only<1>{Какое значение \result~допустимо? $\{0, 1, 42\}$?}%
-\only<2>{Предположим \nd[2]{r1} видит \nd[2]{b}: $b \mc r1$}%
-\only<3>{По-хорошему, нам нужно $w2 \hbs r2$}
-\only<4,5>{Попробуем найти f: $f \hb b$. На эту роль подходит только \nd[4,5]{f1}}%
-\only<5>{\\Ведь freeze происходит после измерения final полей}%
-\only<6>{Если f это f1, то должно быть $w2 \hb f1$}%
-\only<7>{Program order наносит ответный удар: $f1 \hb w2$}%
-\only<8>{Итого: после публикации менять final поля опасно. \result~$\in \{0,1,42\}$}%
-\end{center}
-
-\vskipfill
-
-% Стрелочки между tikz-якорями
-\begin{tikzpicture}[overlay]
-  \path[mc edge,->]<2-> (b) edge [out=-45, in=-135, looseness=1.2] node[mc label] {mc} (r1);
-  \path[hbs edge,maybe,->]<3-> (w2) edge [out = 45, in = 130, looseness = 1.4] node[hbs label] {hb*?} (r2);
-  \path[hb edge,->]<4-> (f1) edge [out=-100, in=-145, looseness=1.45] node[hb label] {hb} (b);
-  \path[hb edge,maybe,->]<4-> (f2) edge [out=90, in=90, looseness=3] node[hb label] (hb-f2-b) {hb?} (b);
-  \redcross<5->{hb-f2-b}
-  \path[hb edge,maybe,->]<6-> (w2) edge [out=80, in=20, looseness=1.4] node[hb label] (hb-w2-f1) {hb?} (f1);
-  \redcross<7->{hb-w2-f1}
-\end{tikzpicture}
-\end{frame}
-\fi
-
+\input{slides.tex}
 \end{document}

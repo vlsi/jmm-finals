@@ -1,0 +1,37 @@
+% ---------------------------------------
+% Вступительная загадка
+%
+\ifrender
+% lstlisting cannot be placed inside \only :(
+\defverbatim[colored]\lstIntOne{%
+\begin{lstlisting}
+int x = 1;
+\end{lstlisting}
+}
+\defverbatim[colored]\lstFinalIntOne{%
+\begin{lstlisting}
+final int x = 1;
+\end{lstlisting}}
+
+\subsection{Загадка}
+\begin{frame}[fragile]{Код-загадка}
+\begin{center}%
+\begin{minipage}[3]{0.5\textwidth}%
+\only<1-2>{\lstIntOne}%
+\only<3-4>{\lstFinalIntOne}%
+\begin{lstlisting}[]
+public int neverTryThisAtHome() {
+  int i = this.x; // it is 1, isn't it?
+  this.setX(2); // just updates x to 2
+  return this.x - i; // 2 - 1 == ...?
+}
+\end{lstlisting}%
+\end{minipage}%
+\end{center}%
+\only<1>{Какие значения могут вернуться? 1? 0? -1?}
+\only<2>{Да, тут вернётся 1}
+\only<3>{А теперь добавим \sout{ножек} \lstinline!final!}
+\only<4>{Спецификация разрешает все варианты: 1, 0, и даже -1! (см. пример 17.5.3-1)}
+\vskipfill
+\end{frame}
+\fi

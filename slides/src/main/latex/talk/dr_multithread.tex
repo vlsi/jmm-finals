@@ -1,0 +1,39 @@
+% ---------------------------------------
+% Dereference chain. Между потоками не возникает
+%
+\ifrender
+\begin{frame}[fragile]{Dereference chain между потоками}
+\vskiptitle
+\begin{minipage}[t]{.49\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+T localA = new T(); ~\nd<2->[2,3]{a}~
+GLOBAL = localA;
+	\end{lstlisting}
+\end{minipage}
+\begin{minipage}[t]{.49\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T localB = GLOBAL; ~\nd<1->[1]{r1}~
+if (localB != null) {
+  int localX = localB.x; ~\nd<1->[1-]{r2}~
+}
+\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]
+  \path[dr edge,->]<1-> (r1) edge [bend right, out = 90, in = 90, looseness = 2] node {dr} (r2);
+  \path[dr edge,maybe,->]<2-> (a) edge [bend right, out = 270, in = 270, looseness = 0.8] node (drq) {dr?} (r2);
+  \redcross<3->{drq}
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{$r1 \dr r2$ (читаем поле несозданного нами объекта)}%
+\only<2>{Есть ли $a \dr r2$?}%
+\only<3>{Между потоками {\drbox} не возникает!}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

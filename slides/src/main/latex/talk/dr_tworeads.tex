@@ -1,0 +1,34 @@
+% ---------------------------------------
+% Dereference chain. Контрольный выстрел
+%
+\ifrender
+\begin{frame}[fragile]{Dereference chain: контрольный выстрел}
+\vskiptitle
+\begin{center}
+\begin{minipage}{.5\linewidth}
+	\begin{lstlisting}
+T local = GLOBAL; ~\nd<1->[2]{ra}~
+
+local = GLOBAL; ~\nd<1->[2]{rb}~
+
+int localX = local.x; ~\nd<1->{r2}~
+	\end{lstlisting}
+\end{minipage}%
+\end{center}%
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]%
+  \path[dr edge,maybe,->]<2-> (ra) edge [bend right, out = 90, in = 90, looseness = 2] node {dr?} (r2);
+  \path[dr edge,maybe,->]<2-> (rb) edge [bend right, out = 90, in = 90, looseness = 1] node {dr?} (r2);
+\end{tikzpicture}%
+
+\begin{center}
+\only<1>{Есть ли здесь \drbox?}%
+\only<2>{Один из $ra \dr r2$ или $rb \dr r2$ точно должен быть, но точнее сказать невозможно}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

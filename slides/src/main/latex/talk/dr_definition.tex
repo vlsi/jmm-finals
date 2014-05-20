@@ -1,0 +1,35 @@
+% ---------------------------------------
+% Dereference chain. Пример возникновения
+%
+\ifrender
+\subsection{Dereference chain}
+\begin{frame}[fragile]{Dereference chain: что это?}
+\vskiptitle
+\begin{center}
+\begin{minipage}[3]{.5\linewidth}
+	\begin{lstlisting}
+T local = GLOBAL; ~\nd<1->{r1}~
+
+int localX = local.x; ~\nd<1->[1-]{r2}~
+	\end{lstlisting}
+\end{minipage}
+\end{center}
+
+\vskipfill
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[dr edge,->]<4-> (r1) edge [bend right, out = 90, in = 90, looseness = 2] node {dr} (r2);
+\end{tikzpicture}%
+
+\begin{itemize}[<+->]
+\item \nd[1-]{r2} читает поле объекта
+\item Поток не создавал объект
+\item Значит, где-то мы должны были читать адрес этого объекта
+\item Это называется $r1 \dr r2$
+\end{itemize}
+
+\vskipfill
+
+\end{frame}
+\fi

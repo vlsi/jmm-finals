@@ -1,0 +1,71 @@
+% ---------------------------------------
+% java 1.4 & String security
+%
+\ifrender
+
+\newcommand{\tikzref}[2]{% to define an anchor
+  \tikz[remember picture]{%
+    \coordinate (#1) at (#2);%
+ }%
+}
+
+\defverbatim[colored]\lstHackStringThread{%
+\begin{minipage}[t]{.5\textwidth}%
+\begin{lstlisting}[title=HackThread]
+GLOBAL =
+  "/tmp/etc/passwd"
+  .~\tikzref{sub}{0,0.5ex}~substring(4);
+\end{lstlisting}%
+\end{minipage}%
+}
+
+\defverbatim[colored]\lstHandleString{%
+\begin{lstlisting}
+String s = ...
+if (checkAccess(s)) {
+  return readFile(s);
+}
+\end{lstlisting}%
+}
+
+\defverbatim[colored]\lstGetAndHandleString{%
+\begin{lstlisting}
+String s = GLOBAL;
+if (checkAccess(s~\tikzref{s1}{0,1ex}~)) {
+  return readFile(s~\tikzref{s2}{0,0}~);
+}
+\end{lstlisting}
+}
+
+\subsection{Final и безопасность}
+\begin{frame}[fragile]
+\frametitle{\alt<1,8>{Без}{\sout{Без}}опасность String \only<2-7>{в java 1.4}\only<8>{в java 1.5+}}
+\vskiptitle
+\begin{minipage}[t]{.5\textwidth}%
+\alt<1-2>{\begin{minipage}[t]{.5\textwidth}\lstHandleString\end{minipage}%
+}{\begin{minipage}[t]{.5\textwidth}\lstGetAndHandleString\end{minipage}%
+}%
+\end{minipage}%
+\only<3->{\begin{minipage}[t]{.5\textwidth}\lstHackStringThread\end{minipage}%
+}%
+\vskipfill
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<5-7> (sub) edge [out=120,in=45,looseness=1] node {race} (s1);
+  \path[hb edge,->]<5-7> (sub) edge [out=-130,in=-60,looseness=1] node {race} (s2);
+  \path[hbs edge,->]<8> (sub) edge [out=120,in=45,looseness=1] node {hb} (s1);
+  \path[hbs edge,->]<8> (sub) edge [out=-130,in=-60,looseness=1] node {hb} (s2);
+\end{tikzpicture}
+\only<1>{Правильно ли проверяются права на доступ к файлу?}%
+\only<2>{Ответ зависит от версии, и в java 1.4 возможны проблемы}
+\only<3>{Например: HackThread выполняет \lstinline!.substring(4)! и коварно передаёт его в поток, читающий файлы}%
+\only<4>{В java 1.4 substring-строка ссылается на тот же массив символов, и всё опреледяется полями \lstinline!String##offset! и \lstinline!String##size!}%
+\only<5>{Синхронизации между потоками нет, поэтому читатель может увидеть недоинициализированный объект-строку}%
+\only<6-7>{\lstinline!checkAccess! может увидеть \lstinline!"/tmp/etc/passwd"!,
+а \lstinline!readFile! уже \lstinline!"/etc/passwd"!%
+\uncover<7>{\parДаже синхронизация на \lstinline!s! не спасёт!}
+}%
+\only<8>{В java 1.5+ \lstinline!final! защищает от недосозданных объектов и HackTread}%
+\vskipfill
+\end{frame}
+\fi

@@ -1,0 +1,47 @@
+% ---------------------------------------
+% Пример 3 "утекание this из конструктора"
+%
+\ifrender
+\subsection{Утекание this (3)}
+\begin{frame}[fragile]{Утекание this (3)}
+\vskiptitle
+\hbsprogress{2-}{0}{0}{0}%
+% Сорцы и tikz-якоря
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+T l = new T() {{
+  fx = 42; ~\nd<1->[1,2]{w}~
+  GLOBAL = this; ~\nd<2->[2,3,4,5]{a}~
+}}; ~\nd<2->[2,3,4]{f}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T o = GLOBAL;
+if (o != null) {
+  int result = o.fx; ~\nd<1->[1,5]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [out=135, in=135, looseness=1.5] node {hb} (f);
+  \path[hb edge,->]<2-> (a) edge [bend left=60] node {hb} (f);
+  \path[hb edge,maybe,->]<3-> (f) edge [bend right=5] node (hbq) {hb?} (a);
+  \redcross<4->{hbq}
+\end{tikzpicture}%
+
+% Подписи, потихоньку появляющиеся под сорцами
+\begin{center}
+\only<1>{Возможно ли в \result~получить $0$?}%
+\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $a \hb f$}%
+\only<3>{Но нам-то нужно $f \hb a$!}%
+\only<4>{Если $a \hb f$ и $f \hb a$, то $a = f$ (антисимметричность {\hbbox})\\Но публикация ссылки это никак не freeze action!}%
+\only<5>{Нет \hbsbox, поэтому возможны все варианты: \result~$\in \{0, 42\}$}%
+\end{center}
+\vskipfill
+\end{frame}
+\fi

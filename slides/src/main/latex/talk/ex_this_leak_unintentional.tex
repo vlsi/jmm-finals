@@ -1,0 +1,55 @@
+% ---------------------------------------
+% Пример 4 "утекание this из конструктора, чтение из другой ссылки"
+%
+\ifrender
+\subsection{Вредительское утекание this (4)}
+\begin{frame}[fragile]{Вредительское утекание this (4)}
+\vskiptitle
+\hbsprogress{2-}{2-}{0}{0}%
+% Сорцы и tikz-якоря
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+T l = new T() {{
+  fx = 42; ~\nd<1->[1,2]{w}~
+  GLb = this; ~\nd<2->[6]{b}~
+}}; ~\nd<2->[2]{f}~
+GLa = l; ~\nd<2->[2,3]{a}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T u = GLb; ~\nd<4->[4,5,6]{rb}~
+T o = GLa; ~\nd<3->[3,4]{ra}~
+if (o != null) {
+  int result = o.fx; ~\nd<4->[4,5,6]{r1}~ ~\nd<1>[1]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [out=120, in=110, looseness=2.5] node {hb} (f);
+  \path[hb edge,->]<2-> (f) edge [bend right=80, looseness=1.6] node {hb} (a);
+  \path[hb edge,maybe,->]<2-> (f) edge [bend right=10] node (hb-f-b) {hb?} (b);
+  \redcross<2->{hb-f-b}
+  \path[mc edge,->]<3-> (a) edge [out=27, in=167, looseness=1.3] node {mc} (ra);
+  \path[dr edge,maybe,->]<4-> (ra) edge [out=-90, in=235, looseness=1.5] node {dr?} (r1);
+  \path[dr edge,maybe,->]<4> (rb) edge [out=0, in=90, looseness=1.5] node {dr?} (r1);
+  \path[dr edge,->]<5-> (rb) edge [out=0, in=90, looseness=1.5] node {dr} (r1);
+\end{tikzpicture}
+
+% Подписи, потихоньку появляющиеся под сорцами
+\begin{center}
+\only<1>{Возможно ли в \result~получить $0$?}%
+\only<2>{Действия в одном потоке образуют happens-before:\\ $w \hb f$, $f \hb a$}%
+\only<3>{Пусть второй поток увидел \lstinline!GLa!, тогда $a \mc ra$!}%
+\only<4>{Где-то должно быть \drbox: $rb \dr r1$ или $ra \dr r1$}%
+\only<5>{Если $rb \dr r1$, то мы попали, т.к. $w \hbs r1$ не строится}%
+\only<6>{Вывод: если наш поток уже читал объект с незамороженными полями, то гарантий final semantics нет!}%
+\end{center}
+
+\vskipfill
+\end{frame}
+\fi
