@@ -1,0 +1,12 @@
+\ifrender
+\subsection{Happens-before}
+\begin{frame}{Happens-before}
+\begin{itemize}[<+->]
+\item Основной принцип JMM: рассмотрим все возможные выполнения и откинем "неправильные"
+\item Happens-before это частичный порядок, который должен соблюдаться
+\item Запрещено видеть "будущие" записи ($r \hb w$)
+\item И те, которые были перетёрлись в {\hbbox} порядке: $w1 \hb w2 \hb r$
+\item И те, которые запрещены просто так: 17.4.8 executions and causality requirements
+\end{itemize}
+\end{frame}
+\fi

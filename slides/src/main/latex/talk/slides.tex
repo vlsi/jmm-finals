@@ -1,7 +1,5 @@
 \input{title.tex}
 
-\input{disclaimer.tex}
-
 \section{Введение}
 
 \input{why_jmm.tex}
@@ -9,6 +7,16 @@
 
 \input{why_final.tex}
 \input{java14_string_security.tex}
+
+\ifrender
+\begin{frame}
+\Huge Немного теории
+\end{frame}
+\fi
+
+\input{program_order.tex}
+\input{partial_order.tex}
+\input{hb_definition.tex}
 
 \input{hbs_definition.tex}
 
@@ -21,6 +29,7 @@
 \input{mc_definition.tex}
 
 \section{Примеры}
+\input{disclaimer.tex}
 
 \input{ex_trivial.tex}
 \input{ex_array.tex}
