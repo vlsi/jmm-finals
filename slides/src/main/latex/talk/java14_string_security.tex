@@ -63,7 +63,7 @@ if (checkAccess(s~\tikzref{s1}{0,1ex}~)) {
 \only<5>{Синхронизации между потоками нет, поэтому читатель может увидеть недоинициализированный объект-строку}%
 \only<6-7>{\lstinline!checkAccess! может увидеть \lstinline!"/tmp/etc/passwd"!,
 а \lstinline!readFile! уже \lstinline!"/etc/passwd"!%
-\uncover<7>{\parДаже синхронизация на \lstinline!s! не спасёт!}
+\uncover<7>{\parДаже синхронизация на \lstinline!s! и \lstinline!volatile! не спасут!}
 }%
 \only<8>{В java 1.5+ \lstinline!final! защищает от недосозданных объектов и HackTread}%
 \vskipfill
