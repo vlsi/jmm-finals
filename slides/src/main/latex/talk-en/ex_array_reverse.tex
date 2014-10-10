@@ -1,0 +1,48 @@
+% ---------------------------------------
+% Example 2.1 "order of assignments to final"
+%
+\ifrender
+\subsection{Array reversed (2.1)}
+\begin{frame}[fragile]{Array reversed (2.1)}
+\vskiptitle
+\hbsprogress{2-}{2-}{2-}{2-}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T l = new T() {{
+  int[] u = new int[1];
+  fx = u; // (!)
+  u[0] = 42; ~\nd<1->[1,2,3]{w}~
+}}; ~\nd<2->{f}~
+GLOBAL = l; ~\nd<2->{a}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T o = GLOBAL;
+if (o != null) {
+  int[] lfx = o.fx; ~\nd<2->{r1}~
+  int result = lfx[0]; ~\nd<2->[2,3]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [] node {hb} (f);
+  \path[hb edge,->]<2-> (f) edge [bend left=15] node {hb} (a);
+  \path[mc edge,->]<2-> (a) edge [bend left, looseness=0.7] node[mc label] {mc} (r1);
+  \path[dr edge,->]<2-> (r1) edge [bend right, out = 270, in = 270, looseness = 2.2] node {dr} (r2);
+  \path[hbs edge,->]<2-> (w) edge [bend right, out = 90, in = 90, looseness = 0.7] node {hb$^*$} (r2);
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{Can \result~become $0$?}%
+\only<2>{We compose {\hbsbox} exactly as in the previous example}%
+\only<3>{($w \hbs r2) \Rightarrow$ \result~$\in \{42\}$\\The result does not depend on the order of assignment to final fields!}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

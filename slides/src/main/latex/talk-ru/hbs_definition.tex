@@ -13,12 +13,14 @@
 \item $f$ -- заморозка \lstinline!final! поля, которое читается в $r1$
 \end{itemize}
 }%
-\only<3-4>{%
+\only<3-5>{%
 \begin{itemize}[<+(2)->]
 \item Если единственный путь от записи к чтению идёт через все эти стрелочки, то мы не можем увидеть более ранние записи
 \item Если путей больше одного -- как повезёт
+\item Мы пишем \hbsbox для удобства, и т.к. "this happens-before ordering does not transitively close with other happens-before orderings"
 \end{itemize}
 }%
+\note{Честно говоря, не понятно что значит это "does not transitively close". Скорее всего, это значит, что для того, чтобы использовать семантику final полей нельзя составлять цепочку из нескольких hb/hbs рёбер.}%
 \vskipfill
 \end{frame}
 \fi

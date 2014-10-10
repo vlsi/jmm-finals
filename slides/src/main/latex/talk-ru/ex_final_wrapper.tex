@@ -1,0 +1,74 @@
+% ---------------------------------------
+% Пример final wrapper
+%
+\iftrue%render
+\subsection{Final wrapper}
+\begin{frame}[fragile]{Final wrapper (6)}
+\hbsprogresss{8-}{8-}{8-}{8-}{6-}{6-}{3-}{8-}{8-}%
+%\vskip0.05cm
+\begin{minipage}[t]{.34\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+A a = new O() {{
+  fx = 42; ~\nd<1->[1,8]{w}~
+}}; ~\nd<7->{f}~
+GL = a; ~\nd<2->[2,6]{wa}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}[t]{.33\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+A a = GL; ~\nd<2->[2,3]{ra}~
+B = new B() {{
+  fb = o; ~\nd<2->[2,3]{wb}~
+}};
+GL2 = b;
+\end{lstlisting}
+\end{minipage}%
+\begin{minipage}[t]{.27\textwidth}
+	\begin{lstlisting}[title=Thread 3]
+B B = GL2;
+A a = b.fb; ~\nd<2->[2,4,5]{rb}~
+int r = a.fx; ~\nd<2->[1,4-7]{r1}~ ~\nd<1,7->[1,4-]{r2}~
+\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[mc edge,->]<2-6> (wb) edge [bend left=22] node {mc} (rb);
+  \path[mc edge,->]<2-6> (wa) edge [bend left=50] node {mc} (ra);
+  \path[mc edge,->]<3-6> (ra) edge [out=-30, in=-45, looseness=3] node {mc} (wb);
+  \path[dr edge,->]<4-5> (rb) edge [out=-135, in=-135, looseness=4] node {dr} (r1);
+  \path[mc edge,->]<5-6> (rb) edge [out=60, in=70, looseness=4] node {mc} (r1);
+  \path[mc edge,->]<6-> (wa) edge [out=-90, in=-90, looseness=0.4] node {mc} (r1);
+  \path[dr edge,->]<7-> (r1) edge [out=-90, in=-90, looseness = 2] node {dr} (r2);
+  \path[hb edge,->]<8-> (w) edge [out=120, in=110, looseness=2.5] node {hb} (f);
+  \path[hb edge,->]<8-> (f) edge [bend left=45] node {hb} (wa);
+%  \path[mc edge,->]<2-> (r1) edge [out=0, in=-45, looseness=3] node {mc} (w2);
+%  \path[mc edge,->]<3-> (w2) edge [bend left=30] node {mc} (r3);
+%  \path[dr edge,->]<4-> (r3) edge [out=45, in=45, looseness=2.5] node {dr} (r4);
+%  \path[mc edge,->]<5-> (r3) edge [out=235, in=235, looseness=2.5] node {mc} (r4);
+  \path[hbs edge,->]<8-> (w) edge [bend right, out = 45, in = 110, looseness = 1.0] node {hb*} (r2);
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{Возможно ли в \result~получить $0$?}%
+\only<2>{\nd[2]{rb} видит \nd[2]{wb} $\Rightarrow wb \mc rb$\\\nd[2]{ra} видит запись \nd[2]{wa}: $wa \mc ra$}%
+\only<3>{Поток 2 пишет адрес созданного врагом объекта, поэтому $ra \mc wb$}%
+\only<4>{Поток 3 не создавал объект A, \nd[3]{r} читает его поле, а \nd[3]{rb} это единственное чтение адреса объекта, поэтому dereference chain:\\ $rb \dr r1$}%
+\only<5>{$rb \dr r1 \Rightarrow rb \mc r1$}%
+\only<6>{{\mcbox} транзитивно (т.к. частичный порядок) $\Rightarrow wa \mc r1$}%
+\only<7>{Возьмём $r2 = r1$, тогда $r1 \dr r2$ ({\drbox} рефлексивно)}%
+\only<8>{Нашли всё необходимое для $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
+\only<9>{$(w \hbs r2) \Rightarrow$ \result~$\in \{42\}$}%
+%\only<2>{Верно лЕсли чтение видит запись, то $w1 \mc r1$}%
+%\only<3>{Если чтение видит запись, то $w1 \mc r1$}%
+%\only<4>{Если пишем адрес созданного врагом объекта, то $r1 \mc w2$}%
+%\only<5>{\nd[3]{r3} видит \nd[3]{w2} $\Rightarrow w2 \mc r3$}%
+%\only<4,5>{$r3 \dr r4$ (читаем поле	 объекта) \uncover<5>{$\Rightarrow r3 \mc r4$}}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

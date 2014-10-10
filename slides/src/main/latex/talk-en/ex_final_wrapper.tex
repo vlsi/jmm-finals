@@ -1,0 +1,64 @@
+% ---------------------------------------
+% final wrapper exanple
+%
+\iftrue%render
+\subsection{Final wrapper}
+\begin{frame}[fragile]{Final wrapper (6)}
+\hbsprogresss{8-}{8-}{8-}{8-}{6-}{6-}{3-}{8-}{8-}%
+%\vskip0.05cm
+\begin{minipage}[t]{.34\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+A a = new O() {{
+  fx = 42; ~\nd<1->[1,8]{w}~
+}}; ~\nd<7->{f}~
+GL = a; ~\nd<2->[2,6]{wa}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}[t]{.33\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+A a = GL; ~\nd<2->[2,3]{ra}~
+B = new B() {{
+  fb = o; ~\nd<2->[2,3]{wb}~
+}};
+GL2 = b;
+\end{lstlisting}
+\end{minipage}%
+\begin{minipage}[t]{.27\textwidth}
+	\begin{lstlisting}[title=Thread 3]
+B B = GL2;
+A a = b.fb; ~\nd<2->[2,4,5]{rb}~
+int r = a.fx; ~\nd<2->[1,4-7]{r1}~ ~\nd<1,7->[1,4-]{r2}~
+\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]
+  \path[mc edge,->]<2-6> (wb) edge [bend left=22] node {mc} (rb);
+  \path[mc edge,->]<2-6> (wa) edge [bend left=50] node {mc} (ra);
+  \path[mc edge,->]<3-6> (ra) edge [out=-30, in=-45, looseness=3] node {mc} (wb);
+  \path[dr edge,->]<4-5> (rb) edge [out=-135, in=-135, looseness=4] node {dr} (r1);
+  \path[mc edge,->]<5-6> (rb) edge [out=60, in=70, looseness=4] node {mc} (r1);
+  \path[mc edge,->]<6-> (wa) edge [out=-90, in=-90, looseness=0.4] node {mc} (r1);
+  \path[dr edge,->]<7-> (r1) edge [out=-90, in=-90, looseness = 2] node {dr} (r2);
+  \path[hb edge,->]<8-> (w) edge [out=120, in=110, looseness=2.5] node {hb} (f);
+  \path[hb edge,->]<8-> (f) edge [bend left=45] node {hb} (wa);
+  \path[hbs edge,->]<8-> (w) edge [bend right, out = 45, in = 110, looseness = 1.0] node {hb*} (r2);
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{Can \result~become $0$?}%
+\only<2>{\nd[2]{rb} sees \nd[2]{wb} $\Rightarrow wb \mc rb$\\\nd[2]{ra} sees \nd[2]{wa}: $wa \mc ra$}%
+\only<3>{Thread 2 writes an address of a foreign-created object, thus $ra \mc wb$}%
+\only<4>{Therad 3 did not create object A, \nd[3]{r} reads its field, and \nd[3]{rb} is the only read of A's address, thus dereference chain:\\ $rb \dr r1$}%
+\only<5>{$rb \dr r1 \Rightarrow rb \mc r1$}%
+\only<6>{{\mcbox} is transitive (since it is a partial order) $\Rightarrow wa \mc r1$}%
+\only<7>{Let's pick $r2 = r1$, thus $r1 \dr r2$ ({\drbox} is reflexive)}%
+\only<8>{Here are all the requirements for $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
+\only<9>{$(w \hbs r2) \Rightarrow$ \result~$\in \{42\}$}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

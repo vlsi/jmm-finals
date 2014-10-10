@@ -1,0 +1,12 @@
+\ifrender
+\subsection{Happens-before}
+\begin{frame}{Happens-before}
+\begin{itemize}[<+->]
+\item General idea of JMM: let's consider all the executions and forbid "bad" ones
+\item Happens-before is a partial order that selects allowable reads
+\item A read either sees the latest write (in {\hbbox} order)
+\item Or any write via data race when multiple writes are {\hbbox}-unordered with the read
+\item It must still obey other rules, especially: 17.4.8 executions and causality requirements
+\end{itemize}
+\end{frame}
+\fi

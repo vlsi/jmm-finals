@@ -1,0 +1,55 @@
+% ---------------------------------------
+% Example 1 "trivial final field"
+%
+\ifrender
+\subsection{Trivial final (1)}
+\begin{frame}[fragile]{Trivial final (1)}
+\hbsprogress{2-}{2-}{6-}{7-}%
+\vskiptitle
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+T l = new T() {{
+  fx = 42; ~\nd<1->[1,2,4,8,9]{w}~
+}}; ~\nd<2->[2]{f}~
+GLOBAL = l; ~\nd<2->[2,3,6]{a}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T o = GLOBAL; ~\nd<3-6>[3,4,5]{r0}~
+if (o != null) {
+  int result = o.fx; ~\nd<4->[4,5,6,7]{r1}~ ~\nd<1,7->[1,7,8,9]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [out=120, in=110, looseness=2.5] node {hb} (f);
+  \path[hb edge,->]<2-> (f) edge [bend left=15] node {hb} (a);
+  \path[mc edge,->]<3-6> (a) edge [bend left=40, in=140] node {mc} (r0);
+  \path[dr edge,->]<4-5> (r0) edge [bend right, out = 270, in = 270, looseness = 2] node {dr} (r1);
+  \path[mc edge,->]<5,6> (r0) edge [bend left=20] node {mc} (r1);
+  \path[mc edge,->]<6> (a) edge [bend left=70, in=90, looseness=1.2] node {mc} (r1);
+  \path[mc edge,->]<7-> (a) edge [bend left=45, in=135] node {mc} (r1);
+  \path[dr edge,->]<7-> (r1) edge [out=-90, in=-90, looseness = 1.5] node {dr} (r2);
+  \path[hbs edge,->]<8-> (w) edge [bend right, out = 45, in = 110, looseness = 1.0] node {hb*} (r2);
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{Can \result~become $0$?}%
+\only<2>{Actions in a thread form happens-before:\\ $w \hb f$, $f \hb a$}%
+\only<3>{\nd[3]{r0} sees write \nd[3]{a}:\\ $a \mc r0$}%
+\only<4>{Thread 2 did not create the object, \nd[4]{r1} reads its field, and \nd[4]{r} is the only read of the address, thus we have dereference chain:\\ $r0 \dr r1$}%
+\only<5>{$r0 \dr r1 \Rightarrow r0 \mc r1$}%
+\only<6>{$a \mc r1$ ({\mcbox} is transitive)}%
+\only<7>{Let's pick $r2 = r1$, then $r1 \dr r2$ ({\drbox} is reflexive)}%
+\only<8>{Here all the requirements for $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
+\only<9>{$(w \hbs r2) \Rightarrow$ \result~$\in \{42\}$}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

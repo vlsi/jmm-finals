@@ -1,0 +1,50 @@
+% ---------------------------------------
+% Example 2 "array in final fiel"
+%
+\ifrender
+\subsection{Array in a final field (2)}
+\begin{frame}[fragile]{Array in a final field (2)}
+\vskiptitle
+\hbsprogress{2-}{2-}{3-}{4-}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T l = new T() {{
+  int[] u = new int[1];
+  u[0] = 42; ~\nd<1->[1,2,5,6]{w}~
+  fx = u;
+}}; ~\nd<2->[2]{f}~
+GLOBAL = l; ~\nd<2->[2,3]{a}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T o = GLOBAL;
+if (o != null) {
+  int[] lfx = o.fx; ~\nd<3->[3,4]{r1}~
+  int result = lfx[0]; ~\nd<1->[1,4,5,6]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [] node {hb} (f);
+  \path[hb edge,->]<2-> (f) edge [bend left=15] node {hb} (a);
+  \path[mc edge,->]<3-> (a) edge [bend left, looseness=0.7] node {mc} (r1);
+  \path[dr edge,->]<4-> (r1) edge [bend right, out = 270, in = 270, looseness = 2.2] node {dr} (r2);
+  \path[hbs edge,->]<5-> (w) edge [bend right, out = 90, in = 90, looseness = 0.7] node {hb*} (r2);
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{Can \result~become $0$?}%
+\only<2>{Actions in a thread form happens-before:\\ $w \hb f$, $f \hb a$}%
+\only<3>{\nd[3]{r1} sees write \nd[3]{a} (it reads a regular final field):\\ $a \mc r1$}%
+\only<4>{Thread 2 did not create array, $r2$ reads an element of the array, $r1$ is the only read of the address of the array, thus dereference chain:\\ $r1 \dr r2$}%
+\only<5>{Here are all the requirements for $HB^*$: \\$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}%
+\only<6>{($w \hbs r2) \Rightarrow$ \result~$\in \{42\}$}%
+\end{center}
+
+\vskipfill
+\end{frame}
+\fi

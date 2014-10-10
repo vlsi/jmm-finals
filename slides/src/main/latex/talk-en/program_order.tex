@@ -1,0 +1,11 @@
+\ifrender
+\subsection{Program order}
+\begin{frame}{Program order}
+\begin{itemize}[<+->]
+\item Program order is a total order among inter-thread actions of each thread in source code order
+\item Compiler is forbidden to reorder/alter/ignore operations if observable behavior violates program order
+\item It does not mean the program is executed in program order
+\item For instance: program order is not defined for operations on local variables
+\end{itemize}
+\end{frame}
+\fi

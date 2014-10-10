@@ -1,0 +1,51 @@
+% ---------------------------------------
+% Memory chain. Definition.
+%
+\ifrender
+\subsection{Memory chain}
+\begin{frame}[fragile]{Memory chain: what is that?}
+\hbsprogresss{0}{0}{0}{0}{0}{1-}{0}{0}{0}%
+\vskip0.25cm
+\begin{minipage}[t]{.33\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+T o = new T();
+GL = o; ~\nd<1->[1,6]{w1}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}[t]{.33\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T o = GL; ~\nd<1->[1,2]{r1}~
+GL2 = o; ~\nd<2->[2,3]{w2}~
+\end{lstlisting}
+\end{minipage}%
+\begin{minipage}[t]{.33\textwidth}
+	\begin{lstlisting}[title=Thread 3]
+T o = GL2; ~\nd<3->[3-5]{r3}~
+int r = o.x; ~\nd<4->[4-6]{r4}~
+\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+% Стрелочки между tikz-якорями
+\begin{tikzpicture}[overlay]
+  \path[mc edge,->]<1-> (w1) edge [bend left=30] node {mc} (r1);
+  \path[mc edge,->]<2-> (r1) edge [out=0, in=-45, looseness=3] node {mc} (w2);
+  \path[mc edge,->]<3-> (w2) edge [bend left=30] node {mc} (r3);
+  \path[dr edge,->]<4-> (r3) edge [out=45, in=45, looseness=2.5] node {dr} (r4);
+  \path[mc edge,->]<5-> (r3) edge [out=235, in=235, looseness=2.5] node {mc} (r4);
+  \path[mc edge,->]<6-> (w1) edge [out=-90, in=-90, looseness=0.4] node {mc} (r4);
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{If a read sees write, then $w1 \mc r1$}%
+\only<2>{If a thread writes the address of an object that was initialized in another thread, then $r1 \mc w2$}%
+\only<3>{\nd[3]{r3} sees \nd[3]{w2} $\Rightarrow w2 \mc r3$}%
+\only<4,5>{$r3 \dr r4$ (read of a object's field) \uncover<5>{$\Rightarrow r3 \mc r4$}}%
+\only<6>{{\mcbox} is transitive (it is a partial order) $\Rightarrow w1 \mc r4$}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

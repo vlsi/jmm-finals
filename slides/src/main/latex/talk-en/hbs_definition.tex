@@ -1,0 +1,26 @@
+% ---------------------------------------
+% HB*
+%
+\ifrender
+\subsection{HB$^*$}
+\begin{frame}[fragile]{Semantics of final fields}
+\vskip1.5cm
+\scalebox{1.5}{$w \hb f \hb a \mc r1 \dr r2 \Rightarrow w \hbs r2$}
+\vskip1.3cm
+\only<1-2>{%
+\begin{itemize}[<+->]
+\item $w$ and $r2$ -- the read and the write in question
+\item $f$ -- freeze of a \lstinline!final! field, that is read in $r1$
+\end{itemize}
+}%
+\only<3-5>{%
+\begin{itemize}[<+(2)->]
+\item If the only path from write to read follows all this arrows, then we must not see earlier writes
+\item If multiple paths exist, you need to go deeper
+\item We use \hbsbox notation to distinguish it from \hbbox and since "this happens-before ordering does not transitively close with other happens-before orderings"
+\end{itemize}
+}%
+\note{It is not yet clear what this "does not transitively close" means. I believe it means "if you want to use final field semantics", you must not try to combine multiple hb/hbs edges transitively}%
+\vskipfill
+\end{frame}
+\fi

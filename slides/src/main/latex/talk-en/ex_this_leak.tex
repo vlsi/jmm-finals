@@ -1,0 +1,44 @@
+% ---------------------------------------
+% Example 3 "this leaks"
+%
+\ifrender
+\subsection{this leaks (3)}
+\begin{frame}[fragile]{this leaks (3)}
+\vskiptitle
+\hbsprogress{2-}{0}{0}{0}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 1]
+T l = new T() {{
+  fx = 42; ~\nd<1->[1,2]{w}~
+  GLOBAL = this; ~\nd<2->[2,3,4,5]{a}~
+}}; ~\nd<2->[2,3,4]{f}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T o = GLOBAL;
+if (o != null) {
+  int result = o.fx; ~\nd<1->[1,5]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]
+  \path[hb edge,->]<2-> (w) edge [out=135, in=135, looseness=1.5] node {hb} (f);
+  \path[hb edge,->]<2-> (a) edge [bend left=60] node {hb} (f);
+  \path[hb edge,maybe,->]<3-> (f) edge [bend right=5] node (hbq) {hb?} (a);
+  \redcross<4->{hbq}
+\end{tikzpicture}%
+
+\begin{center}
+\only<1>{Can \result~become $0$?}%
+\only<2>{Actions in thread form happens-before:\\ $w \hb f$, $a \hb f$}%
+\only<3>{For {\hbsbox} we need $f \hb a$!}%
+\only<4>{If $a \hb f$ and $f \hb a$, thus $a = f$ (anti-symmetry of {\hbbox})\\However $a$ is cannot be a freeze action!}%
+\only<5>{There is no \hbsbox, thus all the cases are possible: \result~$\in \{0, 42\}$}%
+\end{center}
+\vskipfill
+\end{frame}
+\fi

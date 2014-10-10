@@ -1,0 +1,35 @@
+% ---------------------------------------
+% Example 5.1 "reflection in action fixed"
+%
+\ifrender
+\subsection{Let's fix reflection (5.1)}
+\begin{frame}[fragile]{Let's fix reflection (5.1)}
+\hbsprogresss{0}{0}{0}{0}{0}{0}{0}{0}{0}%
+% Сорцы и tikz-якоря
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T t = new T() {{
+  fu = new U();
+  fu.x = 1;
+}};
+U w = new U();
+w.x = 42;
+reflectSet(t.fu, w);
+GLOBAL = t; ~\nd<1>[1]{a}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T t = GLOBAL;
+if (t != null) {
+  U u = t.fu;
+  int result = u.x;
+}
+	\end{lstlisting}
+\end{minipage}
+
+\begin{center}
+\only<1>{If we publish the object after all modifications of \lstinline!final! fields, the publication is safe: \result~$\in \{1,42\}$}%
+\end{center}
+\end{frame}
+\fi

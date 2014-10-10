@@ -1,0 +1,35 @@
+% ---------------------------------------
+% Dereference chain. Double-check
+%
+\ifrender
+\begin{frame}[fragile]{Dereference chain: double-check}
+\hbsprogresss{0}{0}{0}{0}{0}{0}{0}{1-}{0}%
+\vskiptitle
+\begin{center}
+\begin{minipage}{.5\linewidth}
+	\begin{lstlisting}
+T local = GLOBAL; ~\nd<1->[2]{ra}~
+
+local = GLOBAL; ~\nd<1->[2]{rb}~
+
+int localX = local.x; ~\nd<1->{r2}~
+	\end{lstlisting}
+\end{minipage}%
+\end{center}%
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]%
+  \path[dr edge,maybe,->]<2-> (ra) edge [bend right, out = 90, in = 90, looseness = 2] node {dr?} (r2);
+  \path[dr edge,maybe,->]<2-> (rb) edge [bend right, out = 90, in = 90, looseness = 1] node {dr?} (r2);
+\end{tikzpicture}%
+
+\begin{center}
+\only<1>{Is there a \drbox?}%
+\only<2>{One of $ra \dr r2$ or $rb \dr r2$ must exist, however no one can tell which one}%
+\end{center}
+
+\vskipfill
+
+\end{frame}
+\fi

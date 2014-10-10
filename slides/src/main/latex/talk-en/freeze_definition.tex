@@ -1,5 +1,5 @@
 % ---------------------------------------
-% Freeze action. Определение
+% Freeze action. Definition
 %
 \ifrender
 \tikzstyle{large arrow} = [single arrow,fill=black!20]
@@ -10,9 +10,9 @@
 \begin{tikzpicture}[auto]%
   \node at (0,0) {\includegraphics[trim=0 0 0 180,clip,width=0.85\textwidth]{freeze_action.jpg}};
   \node<2-> [large arrow,anchor=mid east] at (3cm, 0.8cm) {\LARGE Freeze action};
-  \uncover<3->{\node [large arrow,anchor=mid west,shape border rotate=180] at (5.1cm, -0.5cm) {\LARGE Поле};}
+  \uncover<3->{\node [large arrow,anchor=mid west,shape border rotate=180] at (5.1cm, -0.5cm) {\LARGE Field};}
 \end{tikzpicture}%
 \hfil}%
-\uncover<3>{Freeze случается в конце конструктора и морозит \lstinline!final! поля}%
+\\\uncover<3>{Freezes of a \lstinline!final! field occur both at the end of the constructor, and immediately after each modification}%
 \end{frame}
 \fi

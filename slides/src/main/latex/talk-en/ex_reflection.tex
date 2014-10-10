@@ -1,0 +1,53 @@
+% ---------------------------------------
+% Example 5 "reflection in action"
+%
+\ifrender
+\subsection{Reflection in action (5)}
+\begin{frame}[fragile]{Reflection in action (5)}
+\hbsprogresss{0}{0}{0}{0}{0}{0}{0}{0}{0}%
+% Сорцы и tikz-якоря
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}
+T t = new T() {{
+  fu = new U();
+  fu.x = 1; ~\nd<1>[1]{w1}~
+}}; ~\nd<4->[4]{f1}~
+GLOBAL = t; ~\nd<6->[6]{a}~
+U w = new U();
+w.x = 42; ~\nd<1-6>[1,2,4]{w2}~
+reflectSet(t.fu, w); ~\nd<3->[3]{f2}~
+	\end{lstlisting}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+	\begin{lstlisting}[title=Thread 2]
+T t = GLOBAL;
+if (t != null) {
+  U u = t.fu;
+  int result = u.x; ~\nd<1-6>[1,2,5]{r2}~
+}
+	\end{lstlisting}
+\end{minipage}
+
+\vskipfill
+
+\begin{tikzpicture}[overlay]
+  \path[hbs edge,maybe,->]<2-> (w2) edge [out = 45, in = 130, looseness = 1.4] node (hbs-w2-r2) {hb*?} (r2);
+  \redcross<3->{f2}
+  \redcross<4->{f1}
+  \path[hb edge,maybe,->]<4-> (w2) edge [out=80, in=30, looseness=1.4] node (hb-w2-f1) {hb?} (f1);
+  \redcross<4->{hb-w2-f1}
+  \redcross<5->{hbs-w2-r2}
+\end{tikzpicture}
+
+\begin{center}
+\only<1>{Can \result~become $0$?}%
+\only<2>{We'd better have $w2 \hbs r2$ (otherwise we must not see the write of 0 in \lstinline!w.x!)}
+\only<3>{\nd[3]{f2} does not work for {\hbsbox}: there is no suitable $f2 \hb a$}%
+\only<4>{\nd[4]{f1} does not work for {\hbsbox} as well: it must be $w2 \hb f1$}%
+\only<5>{It turns out \nd[5]{r2} is not denied to observe 0}
+\only<6>{Conclusion: do not alter the final field after you publish its contents\\\result~$\in \{0,1,42\}$}%
+\end{center}
+
+\vskipfill
+\end{frame}
+\fi

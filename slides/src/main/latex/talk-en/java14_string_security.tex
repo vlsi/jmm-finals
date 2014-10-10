@@ -37,9 +37,9 @@ if (checkAccess(s~\tikzref{s1}{0,1ex}~)) {
 \end{lstlisting}
 }
 
-\subsection{Final и безопасность}
+\subsection{Final and security}
 \begin{frame}[fragile]
-\frametitle{\alt<1,8>{Без}{\sout{Без}}опасность String \only<2-7>{в java 1.4}\only<8>{в java 1.5+}}
+\frametitle{String \alt<1,8>{safety}{unsafety} \only<2-7>{in 1.4}\only<8>{in java 1.5+}}
 \vskiptitle
 \begin{minipage}[t]{.5\textwidth}%
 \alt<1-2>{\begin{minipage}[t]{.5\textwidth}\lstHandleString\end{minipage}%
@@ -49,23 +49,23 @@ if (checkAccess(s~\tikzref{s1}{0,1ex}~)) {
 \only<3->{\begin{minipage}[t]{.5\textwidth}\lstHackStringThread\end{minipage}%
 }%
 \vskipfill
-% Стрелочки между tikz-якорями
 \begin{tikzpicture}[overlay]
   \path[hb edge,->]<5-7> (sub) edge [out=120,in=45,looseness=1] node {race} (s1);
   \path[hb edge,->]<5-7> (sub) edge [out=-130,in=-60,looseness=1] node {race} (s2);
   \path[hbs edge,->]<8> (sub) edge [out=120,in=45,looseness=1] node {hb} (s1);
   \path[hbs edge,->]<8> (sub) edge [out=-130,in=-60,looseness=1] node {hb} (s2);
 \end{tikzpicture}
-\only<1>{Правильно ли проверяются права на доступ к файлу?}%
-\only<2>{Ответ зависит от версии, и в java 1.4 возможны проблемы}
-\only<3>{Например: HackThread выполняет \lstinline!.substring(4)! и коварно передаёт его в поток, читающий файлы}%
-\only<4>{В java 1.4 substring-строка ссылается на тот же массив символов, и всё опреледяется полями \lstinline!String##offset! и \lstinline!String##size!}%
-\only<5>{Синхронизации между потоками нет, поэтому читатель может увидеть недоинициализированный объект-строку}%
-\only<6-7>{\lstinline!checkAccess! может увидеть \lstinline!"/tmp/etc/passwd"!,
-а \lstinline!readFile! уже \lstinline!"/etc/passwd"!%
-\uncover<7>{\parДаже синхронизация на \lstinline!s! и \lstinline!volatile! не спасут!}
+\only<1>{Is this a valid security check?}%
+\only<2>{The answer depends on the java version, and in java 1.4 the code is insecure}
+\only<3>{For instance: HackThread executes \lstinline!.substring(4)! and transfers it via data race to the checker thread}%
+\only<4>{In java 1.4 result of substring references the same char array, and the value depends on \lstinline!String##offset! and \lstinline!String##size!}%
+\only<5>{Since no synchronization is in place, reader might observe not-fully-initialized \lstinline!String!}%
+\only<6-7>{\lstinline!checkAccess! might observe \lstinline!"/tmp/etc/passwd"!,
+and even then \lstinline!readFile! might observe \lstinline!"/etc/passwd"!%
+\uncover<7>{\par Even synchronization on \lstinline!s! and \lstinline!volatile! will not help!}
 }%
-\only<8>{В java 1.5+ \lstinline!final! защищает от недосозданных объектов и HackTread}%
+\only<8>{In java 1.5+ \lstinline!final! protects from such non-initialized objects from HackThread}%
+\note{Synchronization and volatiles will not help since HackThread will just not use it}
 \vskipfill
 \end{frame}
 \fi
